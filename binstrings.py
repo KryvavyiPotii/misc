@@ -40,6 +40,15 @@ def is_bits(data, verbose=False):
   return True
 
 
+def concatenate_binary_strings(binary_string1, binary_string2):
+  '''Concatenate two binary strings.'''
+
+  binary_string1 = BinaryString(binary_string1)
+  binary_string1.append(binary_string2)
+
+  return binary_string1
+
+
 def set_size(binary_string, size):
   '''Adjust (truncate or expand) the binary string.'''
 
@@ -71,24 +80,26 @@ class BinaryString():
   def __init__(self, data):
     self.binary_string = to_bits(data)
 
+  def is_valid(self):
+    return self.binary_string is not None
+
   def append(self, other):
-    '''Add another binary string to the end.'''
-    other = BinaryString(other)
-    if not is_bits(other):
-      return None
+    '''Add another binary string to the end. Modifies self.binary_string.'''
     
+    other = BinaryString(other)
+
     self.binary_string += other.binary_string
-  
+ 
   def rotr(self, n):
     '''Rotate right the binary string by n bits.'''
     
-    rotred_binary_string = self.binary_string[-n:] + self.binary_string[:-n]
+    rotred_binary_string = concatenate_binary_strings(self[-n:], self[:-n])
     
-    return BinaryString(rotred_binary_string)
+    return rotred_binary_string
 
   def __eq__(self, other):
     other = BinaryString(other)
-    if not is_bits(other):
+    if not other.is_valid():
       return False
 
     return self.binary_string == other.binary_string
@@ -113,7 +124,7 @@ class BinaryString():
     '''
 
     other = BinaryString(other)
-    if not is_bits(other):
+    if not self.is_valid() or not other.is_valid():
       return None
  
     size = max([len(self), len(other)])
@@ -132,11 +143,11 @@ class BinaryString():
   def __neg__(self):
     '''Execute bitwise NOT on the binary string.'''
     
-    if not is_bits(self):
+    if not self.is_valid():
       return None
 
     noted_binary_string = ''
-    for b in self.binary_string:
+    for b in self:
       if b == '0':
         noted_binary_string += '1'
       else:
@@ -148,7 +159,7 @@ class BinaryString():
     return len(self.binary_string)
 
   def __bool__(self):
-    return (is_bits(self) and int(self.binary_string, 2) > 0) == True
+    return self.is_valid() and int(self.binary_string, 2) != 0
 
   def __repr__(self):
     return self.binary_string
