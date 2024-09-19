@@ -1,59 +1,97 @@
 #!/bin/python3
 
-def format_binary_string(binary_string):
-  '''Remove \'0b\' from a binary string.'''
-
-  if len(binary_string) > 2 and binary_string[0:2] == '0b':
-    return binary_string[2:]
+def to_bits(data, check=True):
+  '''Convert str, list or tuple of bits to a bit string.'''
   
-  return binary_string
+  bits = None
 
-
-def is_binary_string(string, verbose=False):
-  '''Check if a string contains only 0s and 1s, except for
-  the \'0b\' at the beginning of the string.
-  '''
+  if isinstance(data, BinaryString):
+    bits = data.binary_string 
+  elif isinstance(data, list) or isinstance(data, tuple):
+    bits = ''.join(bits)
+  elif isinstance(data, str):
+    if len(data) > 2 and data[0:2] == '0b':
+      bits = data[2:]
+    else:
+      bits = data
   
-  if isinstance(string, BinaryString):
-    return is_binary_string(string.binary_string)
+  if check and not is_bits(bits):
+    return None
+  else:
+    return bits
 
-  if not isinstance(string, str):
+
+def is_bits(data, verbose=False):
+  '''Check if a string, list or tuple contains only 0s and 1s.'''
+ 
+  data = to_bits(data, check=False)
+  
+  if not isinstance(data, str):
     if verbose:
-      print('Failure: not a string.')
+      print('Failure: not a bit string.')
     return False
 
-  skip = 0
-  if len(string) > 2 and string[:2] == '0b':
-    skip = 2
-  for b in string[skip:]:
+  for b in data:
     if b not in ['0', '1']:
       if verbose:
-        print('Failure: not a binary string.')  
+        print('Failure: not bits.')  
       return False
 
   return True
 
 
+def set_size(binary_string, size):
+  '''Adjust (truncate or expand) the binary string.'''
+
+  current_size = len(binary_string)
+  if size > current_size:
+    return BinaryString('0' * (size - current_size) + binary_string)
+  else:
+    return BinaryString(binary_string[current_size - size:])
+
+
+def xor_of_bits(bits):
+  '''Calculate XOR of all provided bits.'''
+  
+  bits = BinaryString(bits)
+  if not bits:
+    return None
+
+  bit_sum = BinaryString('0')
+  for b in bits:
+    bit_sum ^= b 
+
+  return bit_sum
+
+
 class BinaryString():
-  '''This class describes a string that contains only binary digits and
-  supports several methods for bitwise operations as well.
+  '''This class describes a string that contains only binary digits.
+  It also supports multiple methods for bitwise operations as well.
   '''
-  def __init__(self, string):
-    if not is_binary_string(string):
-      self.binary_string = None 
-    else:
-      if isinstance(string, BinaryString):
-        self.binary_string = string.binary_string
-      else:  
-        self.binary_string = format_binary_string(string)
+  def __init__(self, data):
+    self.binary_string = to_bits(data)
 
   def append(self, other):
-    '''Concatenate another binary string to the end.'''
+    '''Add another binary string to the end.'''
     other = BinaryString(other)
-    if not is_binary_string(other):
+    if not is_bits(other):
       return None
     
     self.binary_string += other.binary_string
+  
+  def rotr(self, n):
+    '''Rotate right the binary string by n bits.'''
+    
+    rotred_binary_string = self.binary_string[-n:] + self.binary_string[:-n]
+    
+    return BinaryString(rotred_binary_string)
+
+  def __eq__(self, other):
+    other = BinaryString(other)
+    if not is_bits(other):
+      return False
+
+    return self.binary_string == other.binary_string
 
   def __getitem__(self, value):
     # value can be either int, tuple or slice.
@@ -64,59 +102,45 @@ class BinaryString():
     elif isinstance(value, tuple):
       index = value[0]
 
-    if index >= len(self.binary_string):
+    if index and index >= len(self.binary_string):
       raise IndexError()
 
     return BinaryString(self.binary_string[value])
 
-  def rotr(self, n):
-    '''Rotate a binary string by n bits.'''
-    
-    rotred_binary_string = self.binary_string[-n:] + self.binary_string[:-n]
-    
-    return BinaryString(rotred_binary_string)
-
   def __xor__(self, other):
-    '''XOR provided binary strings. If strings have different lengths,
-    left zero padding is added to the shorter string.
+    '''XOR the binary strings. If they have different lengths,
+    0s are added to the beginning of the shorter string.
     '''
 
     other = BinaryString(other)
-    if not is_binary_string(other):
+    if not is_bits(other):
       return None
  
-    binary_string1, length1 = self.binary_string, len(self.binary_string) 
-    binary_string2, length2 = other.binary_string, len(other.binary_string)
-    if length1 <= length2:
-      binary_string1, binary_string2 = binary_string2, binary_string1
-      length1, length2 = length2, length1
-    binary_string2 = '0' * (length1 - length2) + binary_string2 
+    size = max([len(self), len(other)])
+    binary_string1 = set_size(self.binary_string, size)
+    binary_string2 = set_size(other.binary_string, size)
 
     xored_binary_string = ''
-    for i in range(length1):
+    for i in range(size):
       if binary_string1[i] == binary_string2[i]:
-        xored_bit = '0'
+        xored_binary_string += '0'
       else:
-        xored_bit = '1'
-      
-      xored_binary_string = xored_binary_string + xored_bit
+        xored_binary_string += '1'
 
     return BinaryString(xored_binary_string)
 
   def __neg__(self):
-    '''Execute bitwise NOT on a binary string.'''
+    '''Execute bitwise NOT on the binary string.'''
     
-    if not is_binary_string(self.binary_string):
+    if not is_bits(self):
       return None
 
     noted_binary_string = ''
     for b in self.binary_string:
       if b == '0':
-        noted_bit = '1'
+        noted_binary_string += '1'
       else:
-        noted_bit = '0'
-
-      noted_binary_string = noted_binary_string + noted_bit
+        noted_binary_string += '0'
     
     return BinaryString(noted_binary_string)
 
@@ -124,7 +148,7 @@ class BinaryString():
     return len(self.binary_string)
 
   def __bool__(self):
-    return (self.binary_string is not None and is_binary_string(self)) == True
+    return (is_bits(self) and int(self.binary_string, 2) > 0) == True
 
   def __repr__(self):
     return self.binary_string
