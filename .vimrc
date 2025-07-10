@@ -13,6 +13,7 @@ set expandtab
 set autoindent
 
 set hlsearch
+set incsearch
 
 set colorcolumn=80
 
