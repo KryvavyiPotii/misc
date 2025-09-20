@@ -1,7 +1,11 @@
+set viminfofile=$XDG_STATE_HOME/vim/viminfo
+
 filetype plugin indent on
 
 syntax on
 colorscheme torte
+
+set hidden
 
 set relativenumber
 set number
