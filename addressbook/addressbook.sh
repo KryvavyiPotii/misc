@@ -9,10 +9,10 @@ readonly CMD_REMOVE=remove
 readonly CMD_EDIT=edit
 readonly CMD_EXIT=exit
 
-readonly ERR_MISSING_FILE=1
-readonly ERR_MISSING_ENTRY=2
-readonly ERR_TOO_MANY_ENTRIES=3
-readonly ERR_OPERATION_FAILED=4
+readonly ERR_MISSING_FILE=64
+readonly ERR_MISSING_ENTRY=65
+readonly ERR_TOO_MANY_ENTRIES=66
+readonly ERR_OPERATION_FAILED=67
 
 
 . ./libaddrbook.sh
@@ -37,9 +37,7 @@ add() {
     
     [ $? -eq 0 ] || return $ERR_OPERATION_FAILED
 
-    grep $new_entry $ADDRESSBOOK > /dev/null
-    
-    if [ $? -eq 0 ]; then
+    if grep $new_entry $ADDRESSBOOK >/dev/null; then
         echo "Entry '$new_entry' already exists"
         yes_no "Edit existing entry?" && edit $@
     else
@@ -89,8 +87,10 @@ edit() {
         return 0
     fi
 
-    yes_no "Change '$entry' to '$new_entry'?" \
-        && remove_entry $entry $ADDRESSBOOK; echo $new_entry >> $ADDRESSBOOK
+    yes_no "Change '$entry' to '$new_entry'?" && {
+        remove_entry $entry $ADDRESSBOOK
+        echo $new_entry >> $ADDRESSBOOK
+    }
 }
 
 show_commands() {
@@ -103,7 +103,7 @@ $CMD_EXIT"
 }
 
 
-[ -f $ADDRESSBOOK ] || touch $ADDRESSBOOK
+[ -f $ADDRESSBOOK ] || : > $ADDRESSBOOK
 
 while : ; do
     read -p "addressbook> " cmd args
