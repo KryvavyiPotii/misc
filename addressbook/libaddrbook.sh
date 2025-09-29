@@ -1,6 +1,5 @@
 readonly DELIM=:
-
-readonly ERR_WRONG_ARGUMENTS=1
+readonly ERR_WRONG_ARGUMENTS=64
 
 
 make_entry() {
@@ -41,10 +40,9 @@ parse_email() {
 
 # $1 - prompt message without "(y/N)"
 yes_no() {
+    [ $# -eq 1 ] || return $ERR_WRONG_ARGUMENTS
+    
     read -p "$1 (y/N): " answer
 
-    [ "$answer" = "Y" ] && return 0
-    [ "$answer" = "y" ] && return 0
-
-    return 1
+    [ "$answer" = "Y" ] || [ "$answer" = "y" ]
 }
