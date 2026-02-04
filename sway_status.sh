@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Simple script that shows system info.
-# It is meant to be used by some status bar.
+# It is meant to be used by some status bar (especially sway-bar).
 
 
 get_temp() {
@@ -15,8 +15,6 @@ get_power() {
     energy_full_design="$(cat /sys/class/power_supply/BAT0/energy_full_design)"
     expression="$energy_now / $energy_full_design * 100"
     
-    energy_percentage=$(awk "BEGIN { printf(\"%d\", $expression) }")
-
     case "$(cat /sys/class/power_supply/BAT0/status)" in
         Discharging) 
             charging_state="-" 
@@ -29,7 +27,7 @@ get_power() {
             ;;
     esac
 
-    echo "${energy_percentage}%${charging_state}"
+    awk "BEGIN { printf(\"%d%%%c\", $expression, \"$charging_state\") }"
 }
 
 get_date() {
